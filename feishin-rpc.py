@@ -22,8 +22,8 @@ mp2 = "org.mpris.MediaPlayer2"
 # Load configuration
 config = None
 for location in [
-    f"/home/{getuser()}/.config/iipython/jellyfin-rpc.toml",
-    "/etc/jellyfin-rpc.toml"
+    f"/home/{getuser()}/.config/iipython/feishin-rpc.toml",
+    "/etc/feishin-rpc.toml"
 ]:
     location = Path(location)
     if location.is_file():
