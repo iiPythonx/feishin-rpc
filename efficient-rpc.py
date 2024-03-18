@@ -44,10 +44,12 @@ def cprint(message: str, color: str) -> None:
 loop = GLib.MainLoop()
 
 # Handle discord RPC
-def connect_discord() -> Presence:
+def connect_discord(rpc: Presence = None) -> Presence:
+    if rpc is None:
+        rpc = Presence(config["client_id"])
+
     while True:
         try:
-            rpc = Presence(config["client_id"])
             rpc.connect()
             cprint("✓ Connected to discord!", "g")
             return rpc
@@ -88,23 +90,28 @@ while feishin_bus is None:
 
 def signal_fired(*a) -> None:
     if a[3] == "RunningApplicationsChanged" and a[4][1] and "feishin" in a[4][1][0].lower():
+        cprint("✓ Feishin has been closed.", "r")
         return clear_rpc()
 
     elif a[1] != "/org/mpris/MediaPlayer2":
         return
 
-    md = feishin_bus.Metadata
-    info = {
-        "art": md.get("mpris:artUrl"), "name": md.get("xesam:title"), "album": md.get("xesam:album"),
-        "artist": md.get("xesam:artist", [None])[0], "status": feishin_bus.PlaybackStatus,
+    try:
+        md = feishin_bus.Metadata
+        info = {
+            "art": md.get("mpris:artUrl"), "name": md.get("xesam:title"), "album": md.get("xesam:album"),
+            "artist": md.get("xesam:artist", [None])[0], "status": feishin_bus.PlaybackStatus,
 
-        # Microsecond attributes
-        "length": feishin_bus.Metadata.get("mpris:length", 0) / 1000000,
-        "position": feishin_bus.Position / 1000000
-    }
-    cache_key = (info["name"], info["album"], info["artist"], info["status"])
-    tick_changed = (info["position"] > (cache.position + config["tick_sensitivity"])) or \
-                        (info["position"] < (cache.position - config["tick_sensitivity"]))
+            # Microsecond attributes
+            "length": feishin_bus.Metadata.get("mpris:length", 0) / 1000000,
+            "position": feishin_bus.Position / 1000000
+        }
+        cache_key = (info["name"], info["album"], info["artist"], info["status"])
+        tick_changed = (info["position"] > (cache.position + config["tick_sensitivity"])) or \
+                            (info["position"] < (cache.position - config["tick_sensitivity"]))
+
+    except GError:
+        return
 
     # Handle updating
     cache_changed = cache_key != cache.last
@@ -112,6 +119,7 @@ def signal_fired(*a) -> None:
         track, album, artist, status = info["name"], info["album"], info["artist"], info["status"]
         if (status == "Paused") and not info["position"]:
             cache.last = cache_key
+            cprint("! Nothing is playing.", "b")
             return clear_rpc()
 
         # Handle cover art
@@ -125,19 +133,25 @@ def signal_fired(*a) -> None:
         # Update RPC
         track_status = status if cache_changed else "position update"
         cprint(f"! {track} by {artist} on {album} ({track_status})", "b")
-        rpc.update(
-            name = artist,
-            state = f"on {album}",
-            details = track,
-            large_image = art_uri,
-            large_text = album,
-            small_image = status.lower(),
-            small_text = status,
-            end = (
-                time.time() + info["length"] - info["position"]
-                if status == "Playing" else None
+        try:
+            rpc.update(
+                name = artist,
+                state = f"on {album}",
+                details = track,
+                large_image = art_uri,
+                large_text = album,
+                small_image = status.lower(),
+                small_text = status,
+                end = (
+                    time.time() + info["length"] - info["position"]
+                    if status == "Playing" else None
+                )
             )
-        )
+
+        except PipeClosed:
+            cprint("✗ Connection to discord lost!", "r")
+            connect_discord(rpc)
+
         cache.last = cache_key
 
     cache.position = info["position"]
