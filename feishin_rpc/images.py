@@ -10,6 +10,8 @@ def construct_freeimagehost(art_url: str, service_url: str) -> str:
         resp = requests.post(
             "https://freeimage.host/api/1/upload",
             files = {"source": source.content},
+
+            # Yes, this key is meant to be here.
             params = {"key": "6d207e02198a847aa98d0a2a901485a5", "action": "upload"}
         ).json()
         return resp["image"]["url"]

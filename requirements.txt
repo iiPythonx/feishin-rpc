@@ -1,6 +1,0 @@
-requests
-pypresence @ git+https://github.com/iiarchives/pypresence
-
-# Handle websocket
-rel
-websocket-client[optional]

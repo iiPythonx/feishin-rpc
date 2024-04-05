@@ -32,7 +32,7 @@ def on_open(ws: websocket.WebSocket) -> None:
     auth_basic = b64encode(f"{config_data['remote_user']}:{config_data['remote_pass']}".encode()).decode()
     ws.send(json.dumps({"event": "authenticate", "header": f"Basic {auth_basic}"}))
 
-if __name__ == "__main__":
+def main() -> None:
     try:
         ws = websocket.WebSocketApp(
             f"ws://localhost:{config_data['remote_port']}",
@@ -44,3 +44,6 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         pass
+
+if __name__ == "__main__":
+    main()
