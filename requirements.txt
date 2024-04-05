@@ -1,2 +1,6 @@
-pydbus
+requests
 pypresence
+
+# Handle websocket
+rel
+websocket-client[optional]
