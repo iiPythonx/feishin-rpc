@@ -1,72 +1,46 @@
 # Copyright (c) 2024 iiPython
 
 # Modules
-import os
-import time
+import json
+from base64 import b64encode
 
-if os.name == "nt":
-    pass
+import rel
+import websocket
 
-else:
-    from pydbus import SessionBus
-    from gi.repository import GLib
-    from gi.repository.GLib import GError
-
-from . import cprint, clear_rpc
+from . import cache, clear_rpc
 from .discord import perform_update
-
-# Main loop
-def main_loop_windows() -> None:
-    pass
-
-def main_loop_linux() -> None:
-    loop = GLib.MainLoop()
-
-    # Handle updates
-    bus, feishin_bus = SessionBus(), None
-    while feishin_bus is None:
-        try:
-            feishin_bus = bus.get("org.mpris.MediaPlayer2.Feishin", "/org/mpris/MediaPlayer2")
-
-        except GError:
-            time.sleep(5)
-            pass
-
-    def signal_fired(*a) -> None:
-        if a[3] == "RunningApplicationsChanged" and a[4][1] and "feishin" in a[4][1][0].lower():
-            cprint("✓ Feishin has been closed.", "r")
-            return clear_rpc()
-
-        elif a[1] != "/org/mpris/MediaPlayer2":
-            return
-
-        try:
-            md = feishin_bus.Metadata
-            info = {
-                "art": md.get("mpris:artUrl"), "name": md.get("xesam:title"), "album": md.get("xesam:album"),
-                "artist": md.get("xesam:artist", [None])[0], "status": feishin_bus.PlaybackStatus,
-
-                # Microsecond attributes
-                "length": feishin_bus.Metadata.get("mpris:length", 0) / 1000000,
-                "position": feishin_bus.Position / 1000000
-            }
-            perform_update(info, (info["name"], info["album"], info["artist"], info["status"]))
-
-        except GError:
-            return
-
-    # Hook signals
-    signal_fired(0, "/org/mpris/MediaPlayer2", 0, 0)
-    bus.subscribe(object = "/org/mpris/MediaPlayer2", signal_fired = signal_fired)
-    bus.subscribe(signal = "RunningApplicationsChanged", signal_fired = signal_fired)
-
-    # Launch loop
-    loop.run()
+from .configuration import config_data
 
 # Start loop
+def on_message(ws: websocket.WebSocket, message: bytes) -> None:
+    data = json.loads(message.decode())["data"]
+    song = data.get("song")
+    if song is not None:
+        cache.previous_song = song
+
+    song = song or cache.previous_song
+    perform_update({
+        "art": song["imageUrl"], "name": song["name"], "album": song["album"],
+        "artist": song["artistName"], "status": data["status"],
+        "length": song["duration"] / 1000, "position": data["currentTime"]
+    }, (song["name"], song["album"], song["artistName"], data["status"]))
+
+def on_error(ws: websocket.WebSocket, error: str) -> None:
+    clear_rpc()
+
+def on_open(ws: websocket.WebSocket) -> None:
+    auth_basic = b64encode(f"{config_data['remote_user']}:{config_data['remote_pass']}".encode()).decode()
+    ws.send(json.dumps({"event": "authenticate", "header": f"Basic {auth_basic}"}))
+
 if __name__ == "__main__":
     try:
-        (main_loop_windows if os.name == "nt" else main_loop_linux)()
+        ws = websocket.WebSocketApp(
+            f"ws://localhost:{config_data['remote_port']}",
+            on_open = on_open, on_message = on_message, on_error = on_error
+        )
+        ws.run_forever(dispatcher = rel, reconnect = 15, skip_utf8_validation = True)
+        rel.signal(2, rel.abort)
+        rel.dispatch()
 
     except KeyboardInterrupt:
         pass

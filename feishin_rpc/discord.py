@@ -21,7 +21,7 @@ def perform_update(info: dict, cache_key: tuple) -> None:
     cache_changed = cache_key != cache.last
     if (cache_changed or tick_changed) and info["name"] is not None:
         track, album, artist, status = info["name"], info["album"], info["artist"], info["status"]
-        if (status == "Paused") and not info["position"]:
+        if (status == "paused") and not info["position"]:
             cache.last = cache_key
             cprint("! Nothing is playing.", "b")
             return clear_rpc()
@@ -40,11 +40,12 @@ def perform_update(info: dict, cache_key: tuple) -> None:
                 large_image = art_uri,
                 large_text = album,
                 small_image = status.lower(),
-                small_text = status,
+                small_text = status.capitalize(),
                 end = (
                     time.time() + info["length"] - info["position"]
-                    if status == "Playing" else None
-                )
+                    if status == "playing" else None
+                ),
+                type = 0 if config_data["state_type"] == "playing" else 2
             )
 
         except PipeClosed:

@@ -48,5 +48,6 @@ atexit.register(disconnect_discord)
 # Cache handler
 class Cache():
     last, position = None, 0
+    previous_song = None
 
 cache = Cache()
