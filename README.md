@@ -6,7 +6,7 @@ It's designed to use minimal resources, while still being as fast (and accurate)
 
 This app supports both Navidrome and Jellyfin (and should work with any Feishin-compatible version).
 
-> [!IMPORTANT]  
+> [!WARNING]  
 > Feishin-RPC will **only** work with [Vesktop](https://github.com/Vencord/Vesktop) (or any other client that uses [arrpc](https://github.com/OpenAsar/arrpc)). This is due to discord RPC limitations, and currently can't be bypassed.
 
 ## Installation
