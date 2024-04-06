@@ -2,20 +2,50 @@
 
 # Modules
 import time
-from pypresence import PipeClosed
+import atexit
+from pypresence import Presence, PipeClosed, DiscordNotFound
 
-from . import rpc, cache, cprint, clear_rpc, connect_discord
+from . import cache, cprint
 from .images import image_constructors
 from .configuration import config_data
 
+# Handle discord RPC
+def connect_discord(rpc: Presence = None) -> Presence:
+    if rpc is None:
+        rpc = Presence(config_data["app_id"])
+
+    while True:
+        try:
+            rpc.connect()
+            cprint("✓ Connected to discord!", "g")
+            return rpc
+
+        except DiscordNotFound:
+            time.sleep(5)
+
+rpc = connect_discord()
+
+def clear_rpc() -> None:
+    try:
+        rpc.clear()
+
+    except PipeClosed:
+        pass  # Discord died at the same time as us presumably, so maybe this is a system shutdown?
+
+def disconnect_discord() -> None:
+    clear_rpc()
+    cprint("✓ Disconnected from discord!", "r")
+
+atexit.register(disconnect_discord)
+
 # Config
-tick_sens = float(config_data["tick_sens"])
+time_sens = float(config_data["time_sens"])
 create_art_uri = image_constructors[config_data["image_proxy"]]
 
 # Main methods
 def perform_update(info: dict, cache_key: tuple) -> None:
-    tick_changed = (info["position"] > (cache.position + tick_sens)) or \
-                        (info["position"] < (cache.position - tick_sens))
+    tick_changed = (info["position"] > (cache.position + time_sens)) or \
+                        (info["position"] < (cache.position - time_sens))
 
     # Handle updating
     cache_changed = cache_key != cache.last
@@ -27,7 +57,7 @@ def perform_update(info: dict, cache_key: tuple) -> None:
             return clear_rpc()
 
         # Handle cover art
-        art_uri = create_art_uri(info["art"], config_data["proxy_url"])
+        art_uri = create_art_uri(info["art"])
 
         # Update RPC
         track_status = status if cache_changed else "position update"

@@ -36,6 +36,7 @@ class Configuration(tk.Tk):
             ("image_proxy", "Image Proxy", ttk.Combobox(values = ["freeimagehost", *url_proxies], state = "readonly"), "freeimagehost"),
             ("proxy_url", "Proxy URL", tk.Entry(self), ""),
             ("state_type", "State Type", ttk.Combobox(values = ["playing", "listening"], state = "readonly"), "playing"),
+            ("time_sens", "Time Sensitivity", tk.Entry(self), "2"),
 
             # Feishin settings
             ("_", None, tk.Label(self, text = "Feishin"), None),

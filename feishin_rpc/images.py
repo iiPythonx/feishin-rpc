@@ -4,9 +4,14 @@
 import requests
 from base64 import urlsafe_b64encode
 
+from .configuration import config_data
+
+# Initialization
+proxy_url = config_data["proxy_url"]
+
 # Constructors
-def construct_freeimagehost(art_url: str, service_url: str) -> str:
-    with requests.get(art_url) as source:
+def construct_freeimagehost(art_url: str) -> str:
+    with requests.get(art_url, verify = False) as source:
         resp = requests.post(
             "https://freeimage.host/api/1/upload",
             files = {"source": source.content},
@@ -16,14 +21,14 @@ def construct_freeimagehost(art_url: str, service_url: str) -> str:
         ).json()
         return resp["image"]["url"]
 
-def construct_imgproxy(art_url: str, service_url: str) -> str:
+def construct_imgproxy(art_url: str) -> str:
     if "&v=" in art_url:  # Catch Navidrome since the default links are too large
         art_url = art_url.split("&v=")[0] + "&v=1&c=rpc"
 
-    return f"{service_url.rstrip('/')}/0/{urlsafe_b64encode(art_url.encode()).rstrip(b'=').decode()}.jpg"
+    return f"{proxy_url.rstrip('/')}/0/{urlsafe_b64encode(art_url.encode()).rstrip(b'=').decode()}.jpg"
 
 image_constructors = {
     "freeimagehost": construct_freeimagehost,
     "imgproxy": construct_imgproxy,
-    "ndip": lambda x, u: f"{u.rstrip('/')}/image/{x.split('?id=')[1].split('&')[0]}/{x.split('&size=')[1]}" 
+    "ndip": lambda x: f"{proxy_url.rstrip('/')}/image/{x.split('?id=')[1].split('&')[0]}/{x.split('&size=')[1]}" 
 }

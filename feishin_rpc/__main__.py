@@ -7,9 +7,12 @@ from base64 import b64encode
 import rel
 import websocket
 
-from . import cache, clear_rpc
-from .discord import perform_update
 from .configuration import config_data
+if not config_data:
+    exit("Missing configuration data, please run feishin-rpc-config first.")
+
+from . import cache
+from .discord import perform_update, clear_rpc
 
 # Start loop
 def on_message(ws: websocket.WebSocket, message: bytes) -> None:
