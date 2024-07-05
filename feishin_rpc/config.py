@@ -28,22 +28,10 @@ class Configuration(tk.Tk):
 
         # Handle config values
         values, widgets = [
-
-            # General settings
-            ("_", None, tk.Label(self, text = "General"), None),
-            ("_", None, ttk.Separator(self, orient = "horizontal"), None),
             ("app_id", "Application ID", tk.Entry(self), "1117545345690374277"),
             ("image_proxy", "Image Proxy", ttk.Combobox(values = ["freeimagehost", *url_proxies], state = "readonly"), "freeimagehost"),
             ("proxy_url", "Proxy URL", tk.Entry(self), ""),
             ("state_type", "State Type", ttk.Combobox(values = ["playing", "listening"], state = "readonly"), "playing"),
-            ("time_sens", "Time Sensitivity", tk.Entry(self), "2"),
-
-            # Feishin settings
-            ("_", None, tk.Label(self, text = "Feishin"), None),
-            ("_", None, ttk.Separator(self, orient = "horizontal"), None),
-            ("remote_port", "Remote Port", tk.Entry(self), "4333"),
-            ("remote_user", "Remote User", tk.Entry(self), "feishin"),
-            ("remote_pass", "Remote Pass", tk.Entry(self), "")
         ], {}
         for index, (key, label, widget, default) in enumerate(values):
             if key == "_":
@@ -75,9 +63,6 @@ class Configuration(tk.Tk):
 
                 case "proxy_url":
                     widget.configure(state = "normal" if config_data.get("image_proxy") in url_proxies else "disabled")
-
-                case "update_time":
-                    widget.configure(state = "normal" if sys.platform == "win32" else "disabled")
 
         # Add save button
         def perform_save():

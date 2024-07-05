@@ -1,52 +1,151 @@
 # Copyright (c) 2024 iiPython
 
 # Modules
-import json
-from base64 import b64encode
+import time
+import atexit
+from pydbus import SessionBus
+from gi.repository import GLib
+from gi.repository.GLib import GError  # type: ignore
+from pypresence import Presence, PipeClosed, DiscordNotFound
 
-import rel
-import websocket
+from . import cprint
+from .config import config_data
+from .images import image_constructors
 
-from .configuration import config_data
-if not config_data:
-    exit("Missing configuration data, please run feishin-rpc-config first.")
+# Initialization
+construct_url = image_constructors[config_data["image_proxy"]]
 
-from . import cache
-from .discord import perform_update, clear_rpc
+class Applications:
+    DISCORD = "vesktop.desktop"
+    FEISHIN = "feishin.desktop"
 
-# Start loop
-def on_message(ws: websocket.WebSocket, message: bytes) -> None:
-    data = json.loads(message.decode())["data"]
-    song = data.get("song")
-    if song is not None:
-        cache.previous_song = song
+class FeishinRPC():
+    def __init__(self) -> None:
+        self.bus = SessionBus()
+        self.bus.subscribe(sender = "org.mpris.MediaPlayer2.Feishin", object = "/org/mpris/MediaPlayer2", signal_fired = self._media_change_fire)
+        self.bus.subscribe(signal = "RunningApplicationsChanged", signal_fired = self._application_change_fire)
 
-    song = song or cache.previous_song
-    perform_update({
-        "art": song["imageUrl"], "name": song["name"], "album": song["album"],
-        "artist": song["artistName"], "status": data["status"],
-        "length": song["duration"] / 1000, "position": data["currentTime"]
-    }, (song["name"], song["album"], song["artistName"], data["status"]))
+        self.loop = GLib.MainLoop()
 
-def on_error(ws: websocket.WebSocket, error: str) -> None:
-    clear_rpc()
+        # State data
+        self._feishin, self._discord = None, None
 
-def on_open(ws: websocket.WebSocket) -> None:
-    auth_basic = b64encode(f"{config_data['remote_user']}:{config_data['remote_pass']}".encode()).decode()
-    ws.send(json.dumps({"event": "authenticate", "header": f"Basic {auth_basic}"}))
+    def _media_change_fire(self, *args) -> None:
+        if self._feishin is None:
+            self.connect_feishin()
+
+        try:
+            metadata = self._feishin.Metadata
+            info = {
+                "art": metadata.get("mpris:artUrl"), "name": metadata.get("xesam:title"), "album": metadata.get("xesam:album"),
+                "artist": metadata.get("xesam:artist", [None])[0], "status": self._feishin.PlaybackStatus,
+
+                # Microsecond attributes
+                "length": self._feishin.Metadata.get("mpris:length", 0) / 1000000,
+                "position": self._feishin.Position / 1000000
+            }
+
+        except GError:
+            return self.disconnect_feishin()
+
+        # Fetch data
+        track, album, artist, status = info["name"], info["album"], info["artist"], info["status"]
+        if (status == "Paused") and not info["position"]:
+            cprint("! Nothing is playing.", "b")
+            return self._discord.clear()
+
+        # Update RPC
+        cprint(f"! {track} by {artist} on {album}", "b")
+        try:
+            self._discord.update(
+                name = artist,
+                state = f"on {album}",
+                details = track,
+                large_image = construct_url(info["art"]),
+                large_text = album,
+                small_image = status.lower(),
+                small_text = status,
+                end = (
+                    time.time() + info["length"] - info["position"]
+                    if status == "Playing" else None
+                )
+            )
+
+        except PipeClosed:
+            cprint("✗ Connection to discord lost!", "r")
+            self._discord = None
+
+    # Connection handlers
+    def disconnect_discord(self) -> None:
+        if self._discord is None:
+            return
+        
+        self._discord.clear()
+        cprint("✓ Disconnected from discord!", "r")
+
+    def connect_discord(self) -> None:
+        try:
+            self._discord = Presence(1117545345690374277)
+            self._discord.connect()
+            atexit.register(self.disconnect_discord)
+            cprint("✓ Connected to discord!", "g")
+
+        except DiscordNotFound:
+            pass
+
+    def disconnect_feishin(self) -> None:
+        if self._discord is not None:
+            self._discord.clear()
+
+        self._feishin = None
+        cprint("✓ Disconnected from Feishin!", "r")
+
+    def connect_feishin(self) -> None:
+        try:
+            self._feishin = self.bus.get("org.mpris.MediaPlayer2.Feishin", "/org/mpris/MediaPlayer2")
+            cprint("✓ Connected to Feishin!", "g")
+
+            # Fire in case we already have audio playing
+            self._media_change_fire()
+
+        except GError:
+            pass
+
+    # Handle application changes
+    def _application_change_fire(self, v: str, o: str, i: str, s: str, changes: tuple) -> None:
+        if not changes:
+            return
+
+        opened, closed = [[app.split("/")[-1] for app in section] for section in changes]
+        if Applications.DISCORD in closed:
+            self._discord = None
+            atexit.unregister(self.disconnect_discord)
+            cprint("✓ Disconnected from discord!", "r")
+
+        if Applications.FEISHIN in closed:
+            self.disconnect_feishin()
+
+        if Applications.DISCORD in opened:
+            self.connect_discord()
+
+        if Applications.FEISHIN in opened:
+            self.connect_feishin()
+
+    def start(self) -> None:
+
+        # Attempt initial connections
+        self.connect_discord()
+        self.connect_feishin()
+
+        # Run GLib loop for dbus listening
+        try:
+            self.loop.run()
+
+        except KeyboardInterrupt:
+            pass
 
 def main() -> None:
-    try:
-        ws = websocket.WebSocketApp(
-            f"ws://localhost:{config_data['remote_port']}",
-            on_open = on_open, on_message = on_message, on_error = on_error
-        )
-        ws.run_forever(dispatcher = rel, reconnect = 15, skip_utf8_validation = True)
-        rel.signal(2, rel.abort)
-        rel.dispatch()
-
-    except KeyboardInterrupt:
-        pass
+    FeishinRPC().start()
 
 if __name__ == "__main__":
     main()

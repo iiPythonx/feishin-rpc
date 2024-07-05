@@ -4,7 +4,7 @@
 import requests
 from base64 import urlsafe_b64encode
 
-from .configuration import config_data
+from .config import config_data
 
 # Initialization
 proxy_url = config_data["proxy_url"]
