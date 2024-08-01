@@ -49,7 +49,7 @@ Type=simple
 ExecStart=python3 -m feishin-rpc
 
 # Otherwise, uncomment the following:
-# ExecStart=%h/.feishin-rpc/.venv/bin/python3 -m feishin_rpc
+# ExecStart=%h/.feishin-rpc/.venv/bin/feishin-rpc
 
 [Install]
 WantedBy=default.target
