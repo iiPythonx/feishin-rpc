@@ -11,21 +11,45 @@ This app supports both Navidrome and Jellyfin (and should work with any Feishin-
 
 ## Installation
 
+**Prerequisites:**
 - Install [Python 3.11+](https://python.org) as well as [git](https://git-scm.com).
-- Run `pip install git+https://github.com/iiPythonx/feishin-rpc`.
+
+**The recommended way of installing:**
+
+```sh
+# Create a folder for the RPC
+mkdir ~/.feishin-rpc && cd ~/.feishin-rpc
+
+# Handle venv creation for package isolation
+uv venv
+source .venv/bin/activate
+
+# Install latest version from git
+uv pip install git+https://github.com/iiPythonx/feishin-rpc
+```
+
+**The last resort option:**
+- Run `pip install --break-system-packages git+https://github.com/iiPythonx/feishin-rpc`.
+
+**After installation:**
 - Make a config file following [Configuration](#configuration).
 - Launch by running `feishin-rpc`.
 
 ## Systemd
 
-```
+```conf
 [Unit]
 Description=Feishin RPC Service
 After=network.target
 
 [Service]
 Type=simple
+
+# If you installed Feishin RPC globally:
 ExecStart=python3 -m feishin-rpc
+
+# Otherwise, uncomment the following:
+# ExecStart=%h/.feishin-rpc/.venv/bin/python3 -m feishin_rpc
 
 [Install]
 WantedBy=default.target
