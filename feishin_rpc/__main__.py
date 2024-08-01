@@ -54,14 +54,22 @@ class FeishinRPC():
             cprint("! Nothing is playing.", "b")
             return self._discord.clear()
 
+        # Grab image URL
+        try:
+            image_url = construct_url(info["art"])
+
+        except Exception:
+            image_url = "placeholder"
+            cprint(f"✗ Failed to proxy cover art for {album}.", "r")
+
         # Update RPC
-        cprint(f"! {track} by {artist} on {album}", "b")
+        cprint(f"! {track} by {artist} on {album} ({'seeked' if args and args[3] == 'Seeked' else status.lower()})", "b")
         try:
             self._discord.update(
                 name = artist,
                 state = f"on {album}",
                 details = track,
-                large_image = construct_url(info["art"]),
+                large_image = image_url,
                 large_text = album,
                 small_image = status.lower(),
                 small_text = status,
