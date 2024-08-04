@@ -8,22 +8,28 @@ This app supports both Navidrome and Jellyfin (and should work with any Feishin-
 
 ## ARRPC notice
 
-Regular discord RPC has restrictions in place to avoid you changing the application name from a presence update.  
+Feishin RPC depends on the fact that some modded clients use [arRPC](https://github.com/OpenAsar/arrpc) instead of the normal discord RPC.
 
-ARRPC does not have this issue, therefore *if* you are using an unmodded client you will **need to disable ARRPC support in the Feishin RPC Configuration**.
+<details>
+<summary>Not using a client like Vesktop?</summary>
+<br>
+If you aren't using a client like <a href = "https://github.com/Vencord/Vesktop">Vesktop</a>, you need to disable <i>arRPC Features</i> in the Feishin RPC Configuration.
+<br>
+Example of the difference between arRPC support on and off:
+<br> <br>
 
-Example of the difference between ARRPC support on and off:
-
-| ARRPC (vesktop) | Non-ARRPC (unmodded) |
+| arRPC (vesktop) | Non-arRPC (unmodded) |
 | --------------- | -------------------- |
 | ![Now playing "Eminem"](.github/arrpc.png) | ![Now playing "Feishin"](.github/unmodded.png) |
 
+</details>
+
 ## Installation
 
-**Prerequisites:**
-- Install [Python 3.11+](https://python.org) as well as [git](https://git-scm.com).
+Ensure you have [Python 3.11+](https://python.org/downloads) and [git](https://git-scm.com/) before proceeding.
 
-**The recommended way of installing:**
+<details open>
+<summary><b>Recommended installation</b></summary>
 
 ```sh
 # Create a folder for the RPC
@@ -37,12 +43,25 @@ source .venv/bin/activate
 uv pip install git+https://github.com/iiPythonx/feishin-rpc
 ```
 
-**The last resort option:**
-- Run `pip install --break-system-packages git+https://github.com/iiPythonx/feishin-rpc`.
+</details>
 
-**After installation:**
-- Make a config file following [Configuration](#configuration).
-- Launch by running `feishin-rpc`.
+<details>
+<summary><b>Last resort installation option</b></summary>
+
+```sh
+pip install --break-system-packages git+https://github.com/iiPythonx/feishin-rpc
+```
+
+</details>
+
+## Usage
+
+Configuration will go in a centralized location depending on your OS:
+- Linux: `~/.config/feishin-rpc/config.json`
+- Windows: `%LocalAppData%\feishin-rpc\config.json`
+
+To create the config file for you, run `feishin-rpc-config`.  
+**Afterwards, you can launch the RPC by running `feishin-rpc`.**
 
 ## Systemd
 
@@ -63,11 +82,3 @@ ExecStart=python3 -m feishin-rpc
 [Install]
 WantedBy=default.target
 ```
-
-## Configuration
-
-Configuration will go in a centralized location depending on your OS:
-- Linux: `~/.config/feishin-rpc/config.json`
-- Windows: `%LocalAppData%\feishin-rpc\config.json`
-
-To create the config file for you, run `feishin-rpc-config`.
