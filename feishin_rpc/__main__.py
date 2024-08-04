@@ -68,16 +68,23 @@ class FeishinRPC():
         cprint(f"! {track} by {artist} on {album} ({'seeked' if args and args[3] == 'Seeked' else status.lower()})", "b")
         try:
             self._discord.update(
-                name = artist,
                 state = f"on {album}",
                 details = track,
                 large_image = image_url,
                 large_text = album,
                 small_image = status.lower(),
                 small_text = status,
-                end = (
-                    time.time() + info["length"] - info["position"]
-                    if status == "Playing" else None
+
+                # Calculate end time
+                **(
+                    {"end": time.time() + info["length"] - info["position"]}
+                    if status == "Playing" else {}
+                ),
+
+                # Handle sending name payload (arrpc clients only)
+                **(
+                    {"name": artist}
+                    if config_data["arrpc"] == "on" else {}
                 )
             )
 
@@ -95,7 +102,7 @@ class FeishinRPC():
 
     def connect_discord(self) -> None:
         try:
-            self._discord = Presence(1117545345690374277)
+            self._discord = Presence(config_data["app_id"])
             self._discord.connect()
             atexit.register(self.disconnect_discord)
             cprint("✓ Connected to discord!", "g")

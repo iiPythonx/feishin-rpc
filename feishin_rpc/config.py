@@ -28,10 +28,11 @@ class Configuration(tk.Tk):
 
         # Handle config values
         values, widgets = [
-            ("app_id", "Application ID", tk.Entry(self), "1117545345690374277"),
+            ("app_id", "Application ID", tk.Entry(self, width = 22), "1117545345690374277"),
             ("image_proxy", "Image Proxy", ttk.Combobox(values = ["freeimagehost", *url_proxies], state = "readonly"), "freeimagehost"),
-            ("proxy_url", "Proxy URL", tk.Entry(self), ""),
+            ("proxy_url", "Proxy URL", tk.Entry(self, width = 22), ""),
             ("state_type", "State Type", ttk.Combobox(values = ["playing", "listening"], state = "readonly"), "playing"),
+            ("arrpc", "ARRPC Features", ttk.Combobox(values = ["on", "off"], state = "readonly"), "on")
         ], {}
         for index, (key, label, widget, default) in enumerate(values):
             if key == "_":

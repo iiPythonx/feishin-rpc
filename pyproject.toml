@@ -19,4 +19,4 @@ dependencies = [
 
 [project.scripts]
 feishin-rpc = "feishin_rpc.__main__:main"
-feishin-rpc-config = "feishin_rpc.configuration:launch"
+feishin-rpc-config = "feishin_rpc.config:launch"
