@@ -4,8 +4,7 @@
 import time
 import atexit
 from pydbus import SessionBus
-from gi.repository import GLib
-from gi.repository.GLib import GError  # type: ignore
+from gi.repository.GLib import MainLoop, GError  # type: ignore
 from pypresence import Presence, PipeClosed, DiscordNotFound
 
 from . import cprint
@@ -25,12 +24,15 @@ class FeishinRPC():
         self.bus.subscribe(sender = "org.mpris.MediaPlayer2.Feishin", object = "/org/mpris/MediaPlayer2", signal_fired = self._media_change_fire)
         self.bus.subscribe(signal = "RunningApplicationsChanged", signal_fired = self._application_change_fire)
 
-        self.loop = GLib.MainLoop()
+        self.loop = MainLoop()
 
         # State data
         self._feishin, self._discord = None, None
 
     def _media_change_fire(self, *args) -> None:
+        if self._discord is None:
+            return
+
         if self._feishin is None:
             self.connect_feishin()
 
