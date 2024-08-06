@@ -1,6 +1,5 @@
 # Feishin RPC
 
-
 This is a Python app that displays the currently playing song from [Feishin](https://github.com/jeffvli/feishin) on your discord profile.  
 It's designed to use minimal resources, while still being as fast (and accurate) as possible.  
 
@@ -36,7 +35,7 @@ Ensure you have [Python 3.11+](https://python.org/downloads) and [git](https://g
 mkdir ~/.feishin-rpc && cd ~/.feishin-rpc
 
 # Handle venv creation for package isolation
-uv venv
+uv venv --system-site-packages
 source .venv/bin/activate
 
 # Install latest version from git
@@ -53,6 +52,13 @@ pip install --break-system-packages git+https://github.com/iiPythonx/feishin-rpc
 ```
 
 </details>
+
+---
+
+If you're on a distribution like Arch Linux, you might also need to:
+```sh
+sudo pacman -S python-gobject
+```
 
 ## Usage
 
