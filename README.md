@@ -5,7 +5,7 @@ It's designed to use minimal resources, while still being as fast (and accurate)
 
 This app supports both Navidrome and Jellyfin (and should work with any Feishin-compatible version).
 
-## ARRPC notice
+## Notices
 
 Feishin RPC depends on the fact that some modded clients use [arRPC](https://github.com/OpenAsar/arrpc) instead of the normal discord RPC.
 
@@ -22,6 +22,9 @@ Example of the difference between arRPC support on and off:
 | ![Now playing "Eminem"](.github/arrpc.png) | ![Now playing "Feishin"](.github/unmodded.png) |
 
 </details>
+<br>
+
+**Additionally**, you should use mpv over web player for the most painless experience due to some lasting bugs in Feishin's MPRIS implementation.
 
 ## Installation
 
@@ -79,11 +82,11 @@ After=network.target
 [Service]
 Type=simple
 
-# If you installed Feishin RPC globally:
-ExecStart=python3 -m feishin-rpc
+# If you installed Feishin RPC locally:
+ExecStart=%h/.feishin-rpc/.venv/bin/feishin-rpc
 
 # Otherwise, uncomment the following:
-# ExecStart=%h/.feishin-rpc/.venv/bin/feishin-rpc
+# ExecStart=python3 -m feishin-rpc
 
 [Install]
 WantedBy=default.target
