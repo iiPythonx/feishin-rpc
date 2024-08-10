@@ -18,11 +18,6 @@ class Applications:
     DISCORD = "vesktop.desktop"
     FEISHIN = "feishin.desktop"
 
-class FeishinStub:
-    Metadata: dict
-    Position: int
-    PlaybackStatus: str
-
 class FeishinRPC():
     def __init__(self) -> None:
         self.bus = SessionBus()
@@ -32,8 +27,7 @@ class FeishinRPC():
         self.loop = MainLoop()
 
         # State data
-        self._feishin: FeishinStub = FeishinStub()
-        self._discord = None
+        self._feishin, self._discord = None, None
 
     def _media_change_fire(self, *args) -> None:
         if self._discord is None:
@@ -120,7 +114,7 @@ class FeishinRPC():
         if self._discord is not None:
             self._discord.clear()
 
-        self._feishin = FeishinStub()
+        self._feishin = None
         cprint("✓ Disconnected from Feishin!", "r")
 
     def connect_feishin(self) -> None:
