@@ -34,7 +34,7 @@ class FeishinRPC():
             return
 
         if self._feishin is None:
-            self.connect_feishin()
+            self.connect_feishin(fire = False)
 
         try:
             metadata = self._feishin.Metadata
@@ -117,13 +117,14 @@ class FeishinRPC():
         self._feishin = None
         cprint("✓ Disconnected from Feishin!", "r")
 
-    def connect_feishin(self) -> None:
+    def connect_feishin(self, fire: bool = True) -> None:
         try:
             self._feishin = self.bus.get("org.mpris.MediaPlayer2.Feishin", "/org/mpris/MediaPlayer2")
             cprint("✓ Connected to Feishin!", "g")
 
             # Fire in case we already have audio playing
-            self._media_change_fire()
+            if fire is True:
+                self._media_change_fire()
 
         except GError:
             pass
