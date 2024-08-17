@@ -55,7 +55,7 @@ class FeishinRPC():
 
         # Grab image URL
         try:
-            image_url = construct_url(info["art"])
+            image_url = construct_url(info["art"], config_data["image_proxy"] == "imgbb" and config_data["proxy_key"] or None)
 
         except Exception:
             image_url = "placeholder"
