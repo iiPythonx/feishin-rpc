@@ -24,16 +24,17 @@ class Configuration(tk.Tk):
         self.title("Feishin RPC Configuration")
 
         # Constants
-        url_proxies = ["imgproxy", "ndip", "imgbb"]
+        url_proxies = ["imgproxy", "ndip"]
 
         # Handle config values
         values, widgets = [
             ("app_id", "Application ID", tk.Entry(self, width = 22), "1117545345690374277"),
-            ("image_proxy", "Image Proxy", ttk.Combobox(values = ["freeimagehost", *url_proxies], state = "readonly"), "freeimagehost"),
-            ("proxy_url", "Proxy URL (ndip/imgproxy)", tk.Entry(self, width = 22), ""),
-            ("proxy_key", "API Key (imgbb)", tk.Entry(self, width = 35), ""),
             ("state_type", "State Type", ttk.Combobox(values = ["playing", "listening"], state = "readonly"), "playing"),
-            ("arrpc", "arRPC Features (vesktop only)", ttk.Combobox(values = ["on", "off"], state = "readonly"), "on")
+            ("arrpc", "arRPC Features", ttk.Combobox(values = ["on", "off"], state = "readonly"), "on"),
+            ("_", "", ttk.Separator(), ""),
+            ("image_proxy", "Image Proxy", ttk.Combobox(values = ["freeimagehost", "imgbb", *url_proxies], state = "readonly"), "freeimagehost"),
+            ("proxy_url", "Proxy URL", tk.Entry(self, width = 22), ""),
+            ("imgbb_key", "ImgBB API Key", tk.Entry(self, width = 22), ""),
         ], {}
         for index, (key, label, widget, default) in enumerate(values):
             if key == "_":
@@ -59,6 +60,9 @@ class Configuration(tk.Tk):
                     def selection_changed(event) -> None:
                         widgets["proxy_url"].configure(
                             state = "normal" if widgets["image_proxy"].get() in url_proxies else "disabled"
+                        )
+                        widgets["imgbb_key"].configure(
+                            state = "normal" if widgets["image_proxy"].get() == "imgbb" else "disabled"
                         )
 
                     widget.bind("<<ComboboxSelected>>", selection_changed)

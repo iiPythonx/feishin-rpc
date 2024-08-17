@@ -8,6 +8,7 @@ from .config import config_data
 
 # Initialization
 proxy_url = config_data["proxy_url"]
+imgbb_key = config_data["imgbb_key"]
 
 # Constructors
 def construct_freeimagehost(art_url: str) -> str:
@@ -15,19 +16,16 @@ def construct_freeimagehost(art_url: str) -> str:
         resp = requests.post(
             "https://freeimage.host/api/1/upload",
             files = {"source": source.content},
-
-            # Yes, this key is meant to be here.
             params = {"key": "6d207e02198a847aa98d0a2a901485a5", "action": "upload"}
         ).json()
         return resp["image"]["url"]
     
-def construct_imgbb(art_url: str, api_key: str) -> str:
+def construct_imgbb(art_url: str) -> str:
     with requests.get(art_url, verify = False) as source:
         resp = requests.post(
             "https://api.imgbb.com/1/upload",
             files = {"image": source.content},
-
-            params = {"key": api_key}
+            params = {"key": imgbb_key}
         ).json()
         return resp["data"]["url"]
 
