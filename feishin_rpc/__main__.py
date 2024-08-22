@@ -7,7 +7,7 @@ from pydbus import SessionBus
 from gi.repository.GLib import MainLoop, GError  # type: ignore
 from pypresence import Presence, PipeClosed, DiscordNotFound
 
-from . import cprint
+from . import cprint, cover_cache
 from .config import config_data
 from .images import image_constructors
 
@@ -50,12 +50,18 @@ class FeishinRPC():
         # Fetch data
         track, album, artist, status = info["name"], info["album"], info["artist"], info["status"]
         if (status == "Paused") and not info["position"]:
+            if not (args and "PlaybackStatus" in args[4][1]):
+                return
+
             cprint("! Nothing is playing.", "b")
             return self._discord.clear()
 
         # Grab image URL
         try:
-            image_url = construct_url(info["art"])
+            album_id = info["art"].split("?id=")[1].split("&")[0] if "Items" not in info["art"] \
+                 else info["art"].split("Items/")[1].split("/")[0]
+            image_url = cover_cache.get(album_id) or construct_url(info["art"])
+            cover_cache[album_id] = image_url
 
         except Exception:
             image_url = "placeholder"
@@ -143,6 +149,7 @@ class FeishinRPC():
             self.connect_discord()
 
         if Applications.FEISHIN in opened:
+            time.sleep(4)
             self.connect_feishin()
 
     def start(self) -> None:
