@@ -77,6 +77,7 @@ class FeishinRPC():
                 large_text = album,
                 small_image = status.lower(),
                 small_text = status,
+                type = 1 if config_data["state_type"] == "playing" else 2,
 
                 # Calculate end time
                 **(
