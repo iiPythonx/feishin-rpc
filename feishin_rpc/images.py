@@ -12,8 +12,9 @@ imgbb_key = config_data["imgbb_key"]
 
 # Constructors
 session = requests.Session()
+session.verify = config_data.get("verify_ssl", "off") == "on"
 def construct_freeimagehost(art_url: str) -> str:
-    with session.get(art_url, verify = False) as source:
+    with session.get(art_url) as source:
         resp = session.post(
             "https://freeimage.host/api/1/upload",
             files = {"source": source.content},
@@ -22,7 +23,7 @@ def construct_freeimagehost(art_url: str) -> str:
         return resp["image"]["url"]
     
 def construct_imgbb(art_url: str) -> str:
-    with session.get(art_url, verify = False) as source:
+    with session.get(art_url) as source:
         resp = session.post(
             "https://api.imgbb.com/1/upload",
             files = {"image": source.content},

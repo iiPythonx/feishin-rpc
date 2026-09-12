@@ -31,6 +31,7 @@ class Configuration(tk.Tk):
             ("app_id", "Application ID", tk.Entry(self, width = 22), "1117545345690374277"),
             ("state_type", "State Type", ttk.Combobox(values = ["playing", "listening"], state = "readonly"), "playing"),
             ("arrpc", "arRPC Features", ttk.Combobox(values = ["on", "off"], state = "readonly"), "on"),
+            ("verify_ssl", "Verify SSL", ttk.Combobox(values = ["on", "off"], state = "readonly"), "off"),
             ("_", "", ttk.Separator(), ""),
             ("image_proxy", "Image Proxy", ttk.Combobox(values = ["freeimagehost", "imgbb", *url_proxies], state = "readonly"), "freeimagehost"),
             ("proxy_url", "Proxy URL", tk.Entry(self, width = 22), ""),
